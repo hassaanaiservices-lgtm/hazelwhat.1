@@ -65,9 +65,9 @@ export class BaileysWhatsAppProvider implements IWhatsAppService {
     if (fs.existsSync(sessionFile)) {
       try {
         const data = JSON.parse(fs.readFileSync(sessionFile, 'utf8'));
-        if (data && (data.me || data.authenticated)) {
-          const rawJid = data.me?.id || '';
-          const rawNumber = rawJid.split(':')[0] || rawJid.split('@')[0] || data.phoneNumber || '';
+        if (data && data.me && data.me.id) {
+          const rawJid = data.me.id || '';
+          const rawNumber = rawJid.split(':')[0] || rawJid.split('@')[0] || '';
           const phone = rawNumber ? (rawNumber.startsWith('+') ? rawNumber : '+' + rawNumber) : '+92 300 9876543';
           const connectedSession: WhatsAppSessionInfo = {
             tenantId,

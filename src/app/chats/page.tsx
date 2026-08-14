@@ -135,7 +135,20 @@ export default function ClientChatInboxPage() {
     }
   };
 
+  const [waStatus, setWaStatus] = useState<any>({ status: 'DISCONNECTED', phoneNumber: null });
+
+  const fetchWaStatus = async () => {
+    try {
+      const res = await fetch('/api/client/whatsapp/status');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.statusInfo) setWaStatus(data.statusInfo);
+      }
+    } catch (e) {}
+  };
+
   useEffect(() => {
+    fetchWaStatus();
     fetchAutopilotStatus();
     fetchChats();
   }, []);
@@ -224,19 +237,33 @@ export default function ClientChatInboxPage() {
         <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-xs flex flex-col lg:flex-row min-h-[680px]">
           {/* Left Sidebar Pane (Matching Mockup Screenshot) */}
           <div className="w-full lg:w-96 bg-white border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col p-4 space-y-4 shrink-0">
-            {/* 1. WhatsApp Disconnected / Status Banner matching screenshot */}
-            <div className="bg-amber-50/90 border border-amber-200/70 rounded-2xl p-3 flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="text-violet-600 text-base">🟣</span>
-                <span className="text-xs font-bold text-amber-900">WhatsApp Disconnected</span>
+            {/* Dynamic WhatsApp Status Banner */}
+            {waStatus?.status === 'CONNECTED' ? (
+              <div className="bg-emerald-50/90 border border-emerald-200/70 rounded-2xl p-3 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-emerald-600 text-base">🟢</span>
+                  <span className="text-xs font-bold text-emerald-900">
+                    WhatsApp Active ({waStatus.phoneNumber || 'Connected'})
+                  </span>
+                </div>
+                <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                  ● Live Autopilot
+                </span>
               </div>
-              <Link
-                href="/whatsapp"
-                className="text-xs font-black text-violet-700 hover:text-violet-900 transition-colors"
-              >
-                Reconnect
-              </Link>
-            </div>
+            ) : (
+              <div className="bg-amber-50/90 border border-amber-200/70 rounded-2xl p-3 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-violet-600 text-base">🟣</span>
+                  <span className="text-xs font-bold text-amber-900">WhatsApp Disconnected</span>
+                </div>
+                <Link
+                  href="/whatsapp"
+                  className="text-xs font-black text-violet-700 hover:text-violet-900 transition-colors"
+                >
+                  Connect WhatsApp
+                </Link>
+              </div>
+            )}
 
             {/* 2. Global AI Autopilot Box matching screenshot */}
             <div className="bg-purple-50/70 border border-purple-100 rounded-2xl p-3.5 flex items-center justify-between">
