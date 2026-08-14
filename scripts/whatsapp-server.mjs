@@ -55,9 +55,17 @@ async function getStatus(tenantId) {
   return { tenantId, status: 'DISCONNECTED', phoneNumber: null, qrCodeDataUrl: null };
 }
 
-async function connectTenant(tenantId) {
+async function connectTenant(tenantId, force = false) {
   const status = await getStatus(tenantId);
   if (status.status === 'CONNECTED') return status;
+
+  // Idempotency check: if an active socket exists with a pending QR code and force is false, retain it
+  if (!force && activeSockets.has(tenantId)) {
+    const activeSession = sessions.get(tenantId);
+    if (activeSession && activeSession.qrCodeDataUrl) {
+      return activeSession;
+    }
+  }
 
   // 1. Explicitly close any existing socket attempt for tenantId before creating a new one
   if (activeSockets.has(tenantId)) {
@@ -221,7 +229,7 @@ const server = http.createServer(async (req, res) => {
       body = JSON.parse(Buffer.concat(buffers).toString() || '{}');
     } catch (e) {}
 
-    const status = await connectTenant(tenantId);
+    const status = await connectTenant(tenantId, !!body.force);
     res.writeHead(200);
     return res.end(JSON.stringify({ statusInfo: status }));
   }
