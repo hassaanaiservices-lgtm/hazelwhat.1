@@ -250,42 +250,34 @@ export default function WhatsAppConnectionPage() {
                 </div>
               </>
             ) : (
-              /* State 2: Active QR Code Generated View for scanning */
-              <div className="w-full max-w-md space-y-6">
+              /* Active Live QR Code Container */
+              <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs text-center space-y-4 animate-in fade-in zoom-in duration-200">
                 <div className="space-y-1">
-                  <h2 className="text-base font-black text-slate-900">
-                    Scan QR Code with WhatsApp
-                  </h2>
-                  <p className="text-xs text-slate-500 font-medium">
+                  <h3 className="font-black text-slate-900 text-base">Scan QR Code with WhatsApp</h3>
+                  <p className="text-xs font-semibold text-slate-500">
                     Open WhatsApp on your phone → Settings → Linked Devices → Link a Device
                   </p>
                 </div>
 
-                {/* QR Code Container */}
-                <div className="p-6 bg-white border-2 border-violet-100 rounded-3xl shadow-xl inline-block relative group">
-                  <div className="p-3 bg-white border border-slate-200 rounded-2xl inline-block shadow-inner">
-                    <img
-                      src={
-                        statusInfo?.qrCodeDataUrl ||
-                        `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=Hazelwhat-WA-Pair-${Date.now()}`
-                      }
-                      alt="WhatsApp QR Code"
-                      className="w-56 h-56 mx-auto block"
-                    />
-                  </div>
-                  <div className="mt-3 flex items-center justify-center space-x-2 text-[11px] font-bold text-violet-700">
-                    <span className="w-2 h-2 rounded-full bg-violet-600 animate-ping" />
-                    <span>Waiting for scan...</span>
-                  </div>
-                </div>
-
-                {/* Simulated / Test Session Alert Notice */}
-                <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-2xl p-3.5 text-left font-medium flex items-start space-x-2.5">
-                  <span className="text-base leading-none">💡</span>
-                  <div>
-                    <span className="font-bold block text-amber-900 mb-0.5">Development / Demo Environment Notice</span>
-                    WhatsApp phone camera scanner only accepts active WhatsApp Web cryptographic socket payload strings. In this demo/preview environment, click <b>"Simulate Scan Connected"</b> below or use <b>Link with phone number</b> to test the WhatsApp integration flow.
-                  </div>
+                <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl inline-block shadow-inner">
+                  {statusInfo?.qrCodeDataUrl ? (
+                    <div>
+                      <img
+                        src={statusInfo.qrCodeDataUrl}
+                        alt="WhatsApp QR Code"
+                        className="w-56 h-56 mx-auto block rounded-lg shadow-sm"
+                      />
+                      <div className="mt-3 flex items-center justify-center space-x-2 text-[11px] font-bold text-emerald-700">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                        <span>Live socket ready • Waiting for scan...</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-56 h-56 flex flex-col items-center justify-center space-y-3">
+                      <div className="w-8 h-8 border-3 border-violet-600 border-t-transparent rounded-full animate-spin" />
+                      <p className="text-xs font-bold text-slate-600">Generating live QR code...</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Scanning Steps */}
@@ -300,11 +292,10 @@ export default function WhatsAppConnectionPage() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="w-5 h-5 rounded-full bg-violet-100 text-violet-700 font-black text-[10px] flex items-center justify-center">3</span>
-                    <span>Point camera at QR code or use the quick simulation button below</span>
+                    <span>Point camera at this QR code</span>
                   </div>
                 </div>
 
-                {/* Simulation button for local testing */}
                 <div className="flex items-center justify-between pt-2">
                   <button
                     onClick={() => setIsQrGenerated(false)}
@@ -312,13 +303,11 @@ export default function WhatsAppConnectionPage() {
                   >
                     ← Back
                   </button>
-
                   <button
-                    onClick={handleSimulateConnection}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-4 py-2.5 rounded-xl text-xs shadow-md shadow-emerald-200 transition-all flex items-center space-x-1.5"
+                    onClick={() => handleGenerateQR()}
+                    className="text-xs font-bold text-violet-600 hover:text-violet-800"
                   >
-                    <span>✓</span>
-                    <span>Simulate Scan Connected</span>
+                    🔄 Refresh QR
                   </button>
                 </div>
               </div>
