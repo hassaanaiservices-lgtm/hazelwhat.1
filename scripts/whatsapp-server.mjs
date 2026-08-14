@@ -59,9 +59,18 @@ async function connectTenant(tenantId) {
   const status = await getStatus(tenantId);
   if (status.status === 'CONNECTED') return status;
 
+  // 1. Explicitly close any existing socket attempt for tenantId before creating a new one
   if (activeSockets.has(tenantId)) {
-    const active = sessions.get(tenantId);
-    if (active && active.qrCodeDataUrl) return active;
+    const existingSock = activeSockets.get(tenantId);
+    activeSockets.delete(tenantId);
+    if (existingSock) {
+      console.log(`[STANDALONE-WA-SERVER][TENANT:${tenantId}] Explicitly closing previous socket before reconnecting...`);
+      try {
+        existingSock.ws?.close();
+        existingSock.end?.(new Error('Reconnecting with fresh socket'));
+      } catch (e) {}
+      await new Promise((r) => setTimeout(r, 500));
+    }
   }
 
   const tenantDir = getTenantDir(tenantId);
@@ -119,9 +128,15 @@ async function connectTenant(tenantId) {
         activeSockets.delete(tenantId);
         const code = lastDisconnect?.error?.output?.statusCode;
         console.log(`[STANDALONE-WA-SERVER][TENANT:${tenantId}] Socket closed (code: ${code})`);
-        if (code === DisconnectReason.loggedOut) {
+        
+        // Purge session folder if logged out OR if connection closed prior to full registration
+        const isRegistered = sock.authState?.creds?.registered;
+        if (code === DisconnectReason.loggedOut || !isRegistered) {
+          console.log(`[STANDALONE-WA-SERVER][TENANT:${tenantId}] Purging unauthenticated/corrupted session folder.`);
           sessions.delete(tenantId);
-          if (fs.existsSync(tenantDir)) fs.rmSync(tenantDir, { recursive: true, force: true });
+          if (fs.existsSync(tenantDir)) {
+            try { fs.rmSync(tenantDir, { recursive: true, force: true }); } catch (e) {}
+          }
         }
       }
     });
